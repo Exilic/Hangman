@@ -1,29 +1,28 @@
 ﻿using System;
+using System.Text;
 
 namespace Hangman
 {
     class Program
     {
 
-        
-
         static void Main(string[] args)
         {
             var stayInGame = true;
-
             while (stayInGame)
             {
                 Menu();
-                stayInGame = UserMenuChoice(); // Is it okay to run the whole game through this informal looking line?
+                stayInGame = UserMenuChoice();
             }   
         }
 
 
         static void Menu()
         {
+            Console.Clear();
+            Console.WriteLine("HANGMAN");
             Console.WriteLine("- Start a new game (g)");
             Console.WriteLine("- Quit (q)");
-            Console.WriteLine("- Change the level of difficulty (1–3)");
         }
 
 
@@ -50,10 +49,11 @@ namespace Hangman
         }
 
 
-        static bool GameTurn()
+        static void GameTurn()
         {
             var guessesLeft = 10;
             var gameOutcome = false;
+            StringBuilder incorrectLettersGuessed = new StringBuilder(0);
 
             string hangmanWord = SecretWordPick();
             var hangmanLetters = new char[hangmanWord.Length];
@@ -62,112 +62,201 @@ namespace Hangman
                 hangmanLetters[i] = '_';
             }
 
-            while (guessesLeft > 8)
+            while (guessesLeft > 0)
             {
-                Console.WriteLine("You have {0} guesses left. Your guesses so far: ", guessesLeft);
-                HangmanDrawing(11 - guessesLeft);
-                guessesLeft--;
+                Console.Clear();
+                Console.Write("\nThe word to figure out:        ");
+                for (var j = 0; j < hangmanWord.Length; j++)
+                {
+                    Console.Write("{0} ", hangmanLetters[j]);
+                }
+                Console.WriteLine("\n\nYou have {0} guesses left. Your faulty guesses so far: {1}", guessesLeft, incorrectLettersGuessed);
+
+                HangmanDrawing(guessesLeft);
+
+                var guessResult = UserGuessing(hangmanWord, hangmanLetters, incorrectLettersGuessed);
+                if (guessResult.Item1){
+                    guessesLeft--;
+                }
+                if (guessResult.Item2)
+                {
+                    Console.Write("Good guess!");
+                    if (CheckUnderscore(hangmanLetters))
+                    {
+                        Console.WriteLine("You won!");
+                        System.Threading.Thread.Sleep(1800);
+                        gameOutcome = true;
+                        guessesLeft = 0;
+                    }
+                    else if (guessesLeft == 0)
+                    {
+                        Console.WriteLine("But you still lost!!");
+                        System.Threading.Thread.Sleep(1800);
+                    }
+                    else
+                    {
+                    }
+                }
+                if (guessResult.Item3) {
+                    Console.WriteLine("You won!!!");
+                    System.Threading.Thread.Sleep(1800);
+                    gameOutcome = true;
+                    guessesLeft = 0;
+                }
             }
-
-            Console.ReadKey();
-
-            return gameOutcome;
+            if (gameOutcome){
+                Console.Clear();
+                HangmanSaved();
+            } else {
+                Console.Clear();
+                HangmanDrawing(guessesLeft);
+            }
         }
 
-
-        static void Subroutine(char[] hangmanLetters, string secretWord)
-        {
-
-            for (var j = 0; j < secretWord.Length; j++)
-            {
-                Console.Write("{0} ", hangmanLetters[j]);
-            }
-
-            hangmanLetters[0] = 'x';
-        }
-
+       
         static string SecretWordPick()
         {
-            var possibleWords = new string[] { "steam", "identical", "boat", "undermine", "dog", "formal", "sync", "round", "bird", "catch", "truth" };
+            var possibleWords = new string[] { "steam", "identical", "boat", "undermine", "dog", "formal", "soft", "round", "bird", "catch", "truth" };
             var randomNumber = new Random();
-            string theHangmanWord = possibleWords[randomNumber.Next(11)];
-            return theHangmanWord;
+            string hangmanWord = possibleWords[randomNumber.Next(11)];
+            return hangmanWord;
         }
+
+
+        static (bool, bool, bool) UserGuessing(string hangmanWord, char[] hangmanLetters, StringBuilder incorrectLettersGuessed)
+        {
+            var correctLetter = false;
+            var correctWord = false;
+            var correctGuessForm = true;
+            string userGuess = Console.ReadLine();
+
+            if (ComposedOfLetters(userGuess)){
+                if (userGuess.Length == 1){
+                    correctLetter = LetterGuess(userGuess, hangmanWord, hangmanLetters);
+                    if (incorrectLettersGuessed.ToString().Contains(userGuess))
+                    {
+                        Console.WriteLine("You have already guessed that letter!");
+                        System.Threading.Thread.Sleep(2200);
+                        correctGuessForm = false;
+                    } else if (correctLetter == false){
+                        incorrectLettersGuessed.Append(userGuess);
+                    } else {
+                    }
+                } else if (userGuess.Length == hangmanWord.Length){
+                    correctWord = WordGuess(userGuess, hangmanWord);
+                } else {
+                    Console.WriteLine("Guess a single letter or a word that is {0} letters long", hangmanWord.Length);
+                    System.Threading.Thread.Sleep(1800);
+                    correctGuessForm = false;
+                }
+            } else {
+                Console.WriteLine("Please, use letters only");
+                System.Threading.Thread.Sleep(1800);
+                correctGuessForm = false;
+            }
+            return (correctGuessForm, correctLetter, correctWord);
+        }
+
+
+        static bool LetterGuess(string userGuess, string hangmanWord, char[] hangmanLetters)
+        {
+            var correctLetter = false;
+            for (var i = 0; i < hangmanWord.Length; i++){
+                if (userGuess.Equals(char.ToString(hangmanWord[i])))
+                {
+                    hangmanLetters[i] = char.Parse(userGuess);
+                    correctLetter = true;
+                }
+            }
+            return correctLetter;
+        }
+
+
+        static bool WordGuess(string userGuess, string hangmanWord)
+        {
+            var correctWord = false;
+            if (userGuess.Equals(hangmanWord)){
+                correctWord = true;
+            }
+            return correctWord;
+        }
+
+
+        static bool CheckUnderscore(char[] hangmanLetters)
+        {
+            var noUnderscore = true;
+            for (var i = 0; i < hangmanLetters.Length; i++)
+            {
+                if (hangmanLetters[i].Equals('_'))
+                {
+                    noUnderscore = false;
+                }
+            }
+            return noUnderscore;
+        }
+
+
+        static bool ComposedOfLetters(string userEntry)
+        {
+            var justLetters = true;
+            for (var i = 0; i < userEntry.Length; i++){
+                if (Char.IsLetter(userEntry[i])){
+                } else {
+                    justLetters = false;
+                }
+            }
+            return justLetters;
+        }
+
 
         static void HangmanDrawing(int hangStage)
         {
-           
             switch (hangStage)
             {
-                case 1:
-                    Console.Write("\n\n\n\n\n\n         / \\\n________/   \\________");
-                    break;
-                case 2:
-                    Console.Write("\n\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
-                    break;
-                case 3:
-                    Console.WriteLine("\n          _______\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
-                    break;
-                case 4:
-                    Console.WriteLine("\n          _______\n          | /\n          |/\n          |\n          |\n         / \\\n________/   \\________");
-                    break;
-                case 5:
-                    Console.WriteLine("\n          _______\n          | /   |\n          |/\n          |\n          |\n         / \\\n________/   \\________");
-                    break;
-                case 6:
-                    Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |\n          |\n         / \\\n________/   \\________");
-                    break;
-                case 7:
-                    Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |     |\n          |\n         / \\\n________/   \\________");
-                    break;
-                case 8:
-                    Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |    /|\n          |\n         / \\\n________/   \\________");
+                case 10:
+                    Console.WriteLine("\n\n\n\n\n\n         / \\\n________/   \\________");
                     break;
                 case 9:
+                    Console.WriteLine("\n\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 8:
+                    Console.WriteLine("\n          _______\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 7:
+                    Console.WriteLine("\n          _______\n          | /\n          |/\n          |\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 6:
+                    Console.WriteLine("\n          _______\n          | /   |\n          |/\n          |\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 5:
+                    Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 4:
+                    Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |     |\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 3:
+                    Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |    /|\n          |\n         / \\\n________/   \\________");
+                    break;
+                case 2:
                     Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |    /|\\\n          |\n         / \\\n________/   \\________");
                     break;
-                case 10:
+                case 1:
                     Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |    /|\\\n          |    /\n         / \\\n________/   \\________");
                     break;
-                case 11:
+                case 0:
                     Console.WriteLine("\n          _______\n          | /   |\n          |/    O\n          |    /|\\\n          |    / \\\n         / \\\n________/   \\________");
                     break;
                 default:
                     break;
             }
-
         }
 
 
-
-        /*
-        string hangmanWord = "Foreder";
-        string guess = Console.ReadLine();
-
-        if (guess.Length == 1){
-
-        } else if (guess.Length == hangmanWord.Length){
-
-        } else { Console.WriteLine("Guess a single letter or a word that is {0} long", hangmanWord.Length); }
-
-        Console.WriteLine();
-
-
-        Console.Write("Write a number from 1 to 10:");
-        string Choice = Console.ReadLine();
-        int level = Convert.ToInt32(Choice);
-
-        HangmanBase(level);
-
-        Console.Clear();
-
-        for (int i = 0; i < 12; i++)
+        static void HangmanSaved()
         {
-            Console.Clear();
-            HangmanPresentation(i);
-            System.Threading.Thread.Sleep(1500);
-        }*/
-
-
+            Console.WriteLine("\n          _______\n          | /   |\n          |/\n          |       \\O/\n          |        |\n         / \\       /\\\n________/   \\________");
+            Console.WriteLine("\nHangman saved");
+            System.Threading.Thread.Sleep(5300);
+        }
     }
 }
