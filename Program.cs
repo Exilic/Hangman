@@ -4,12 +4,11 @@ namespace Hangman
 {
     class Program
     {
+
+        
+
         static void Main(string[] args)
         {
-            GameTurn();
-
-           
-            /*
             var stayInGame = true;
 
             while (stayInGame)
@@ -19,35 +18,6 @@ namespace Hangman
             }   
         }
 
-            /*
-            string hangmanWord = "Foreder";
-            string guess = Console.ReadLine();
-
-            if (guess.Length == 1){
-
-            } else if (guess.Length == hangmanWord.Length){
-
-            } else { Console.WriteLine("Guess a single letter or a word that is {0} long", hangmanWord.Length); }
-
-            Console.WriteLine();
-
-            
-            Console.Write("Write a number from 1 to 10:");
-            string Choice = Console.ReadLine();
-            int level = Convert.ToInt32(Choice);
-            
-            HangmanBase(level);
-            
-            Console.Clear();
-
-            for (int i = 0; i < 12; i++)
-            {
-                Console.Clear();
-                HangmanPresentation(i);
-                System.Threading.Thread.Sleep(1500);
-            }
-            
-        
 
         static void Menu()
         {
@@ -56,29 +26,27 @@ namespace Hangman
             Console.WriteLine("- Change the level of difficulty (1–3)");
         }
 
+
         static bool UserMenuChoice()
         {
             var stay = true;
             Console.Write("Choose what to do: ");
-            var menuChoice = Console.ReadKey();
+            var menuChoice = Convert.ToChar(Console.Read());
 
             switch (menuChoice)
             {
-                case "g":
+                case 'g':
                     GameTurn();
                     break;
 
-                case "q":
+                case 'q':
                     stay = false;
                     break;
 
-                case ""
-
-                
+                default:
+                    break;
             }
             return stay;
-
-            */
         }
 
 
@@ -94,24 +62,29 @@ namespace Hangman
                 hangmanLetters[i] = '_';
             }
 
-            Console.WriteLine(hangmanWord);
-
-            for (var j = 0; j < hangmanWord.Length; j++)
+            while (guessesLeft > 8)
             {
-                Console.Write("{0} ", hangmanLetters[j]);
+                Console.WriteLine("You have {0} guesses left. Your guesses so far: ", guessesLeft);
+                HangmanDrawing(11 - guessesLeft);
+                guessesLeft--;
             }
-            /*
-            while (guessesLeft > 0)
-            {
 
-            }
-               */
+            Console.ReadKey();
 
             return gameOutcome;
         }
 
 
+        static void Subroutine(char[] hangmanLetters, string secretWord)
+        {
 
+            for (var j = 0; j < secretWord.Length; j++)
+            {
+                Console.Write("{0} ", hangmanLetters[j]);
+            }
+
+            hangmanLetters[0] = 'x';
+        }
 
         static string SecretWordPick()
         {
@@ -121,16 +94,16 @@ namespace Hangman
             return theHangmanWord;
         }
 
-        static void HangmanPresentation(int hangStage)
+        static void HangmanDrawing(int hangStage)
         {
            
             switch (hangStage)
             {
                 case 1:
-                    Console.WriteLine("\n\n\n\n\n\n         / \\\n________/   \\________");
+                    Console.Write("\n\n\n\n\n\n         / \\\n________/   \\________");
                     break;
                 case 2:
-                    Console.WriteLine("\n\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
+                    Console.Write("\n\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
                     break;
                 case 3:
                     Console.WriteLine("\n          _______\n          |\n          |\n          |\n          |\n         / \\\n________/   \\________");
@@ -161,11 +134,40 @@ namespace Hangman
                     break;
                 default:
                     break;
-
-
-
             }
 
         }
+
+
+
+        /*
+        string hangmanWord = "Foreder";
+        string guess = Console.ReadLine();
+
+        if (guess.Length == 1){
+
+        } else if (guess.Length == hangmanWord.Length){
+
+        } else { Console.WriteLine("Guess a single letter or a word that is {0} long", hangmanWord.Length); }
+
+        Console.WriteLine();
+
+
+        Console.Write("Write a number from 1 to 10:");
+        string Choice = Console.ReadLine();
+        int level = Convert.ToInt32(Choice);
+
+        HangmanBase(level);
+
+        Console.Clear();
+
+        for (int i = 0; i < 12; i++)
+        {
+            Console.Clear();
+            HangmanPresentation(i);
+            System.Threading.Thread.Sleep(1500);
+        }*/
+
+
     }
 }
