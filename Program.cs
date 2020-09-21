@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using System.IO;
+using System.Collections.Generic;
 
 namespace Hangman
 {
@@ -8,11 +10,14 @@ namespace Hangman
 
         static void Main(string[] args)
         {
+            var wordsFromFile = File.ReadAllText(@"/Users/tobiasengberg/Projects/Hangman/SecretWords.txt");
+            string[] possibleWords = wordsFromFile.Split(',');
+            
             var stayInGame = true;
             while (stayInGame)
             {
                 Menu();
-                stayInGame = UserMenuChoice();
+                stayInGame = UserMenuChoice(possibleWords);
             }   
         }
 
@@ -26,7 +31,7 @@ namespace Hangman
         }
 
 
-        static bool UserMenuChoice()
+        static bool UserMenuChoice(string[] possibelWords)
         {
             var stay = true;
             Console.Write("Choose what to do: ");
@@ -35,7 +40,7 @@ namespace Hangman
             switch (menuChoice)
             {
                 case 'g':
-                    GameTurn();
+                    GameTurn(possibelWords);
                     break;
 
                 case 'q':
@@ -48,14 +53,14 @@ namespace Hangman
             return stay;
         }
 
-
-        static void GameTurn()
+      
+        static void GameTurn(string[] possibelWords)
         {
             var guessesLeft = 10;
             var gameOutcome = false;
             StringBuilder incorrectLettersGuessed = new StringBuilder(0);
 
-            string hangmanWord = SecretWordPick();
+            string hangmanWord = SecretWordPick(possibelWords);
             var hangmanLetters = new char[hangmanWord.Length];
             for (var i = 0; i < hangmanWord.Length; i++)
             {
@@ -114,11 +119,10 @@ namespace Hangman
         }
 
        
-        static string SecretWordPick()
+        static string SecretWordPick(string[] possibleWords)
         {
-            var possibleWords = new string[] { "steam", "identical", "boat", "undermine", "dog", "formal", "soft", "round", "bird", "catch", "truth" };
             var randomNumber = new Random();
-            string hangmanWord = possibleWords[randomNumber.Next(11)];
+            string hangmanWord = possibleWords[randomNumber.Next(possibleWords.Length)];
             return hangmanWord;
         }
 
